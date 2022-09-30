@@ -1,4 +1,5 @@
-import ByteBuffer from "bytebuffer";
+import { ByteBuffer } from "./ByteBuffer";
+
 
 export interface ActionHandlerList {
   [key: number]: (bb: ByteBuffer) => ActionData;

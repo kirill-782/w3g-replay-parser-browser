@@ -1,10 +1,11 @@
-import Zlib from "zlib";
-import ByteBuffer from "bytebuffer";
+import { ByteBuffer } from "./ByteBuffer";
 import {
   decodeGameStatString,
   parseStatString,
   StatStringData,
-} from "./MetadataParser.js";
+} from "./MetadataParser";
+
+import pako from "pako";
 
 export type AvailableRecord =
   | GameRecord
@@ -128,12 +129,13 @@ export interface SlotInfo {
   handicap: number;
 }
 
-const decompressor = (data: Uint8Array) =>  {
-  return Zlib.inflateSync(data, { finishFlush: Zlib.constants.Z_SYNC_FLUSH });
-}
+const decompressor = (data: Uint8Array): Uint8Array => {
+  const inflater = new pako.Inflate();
+  inflater.push(data, pako.constants.Z_SYNC_FLUSH | pako.constants.Z_FINISH);
+  return inflater.result as Uint8Array;
+};
 
 export class BlockParser {
-
   public parseBlocks(bb: ByteBuffer, blockCount: number, isReforged: boolean) {
     let decompressedData = new ByteBuffer(8192, true);
     decompressedData.limit = 0;
@@ -156,11 +158,11 @@ export class BlockParser {
       bb.skip(isReforged ? 6 : 4);
 
       const data = bb.readBytes(compressedBlockSize).toBuffer();
-      const decompressedDataBlock = decompressor(data).slice(0, decompressedBlockSize);
-      appendAndCompact(
-        decompressedDataBlock,
-        decompressedData
+      const decompressedDataBlock = decompressor(data).slice(
+        0,
+        decompressedBlockSize
       );
+      appendAndCompact(decompressedDataBlock, decompressedData);
 
       if (i === 0) decompressedData.readUint32(); // Unknown start
 
@@ -217,9 +219,9 @@ export class BlockParser {
 
 const appendAndCompact = (data: Uint8Array, bb: ByteBuffer) => {
   bb.compact();
-  bb.ensureCapacity(bb.limit + data.length)
-  bb.append(data, bb.limit);
+  bb.ensureCapacity(bb.limit + data.length);
   bb.limit += data.length;
+  bb.append(data, bb.limit - data.length);
 
   return;
 };
@@ -320,14 +322,7 @@ const parseGameRecord = (bb: ByteBuffer): GameRecord => {
   const gameName = bb.readCString();
   bb.readUint8();
 
-  // Find null byte
-  bb.mark();
-  while (bb.readByte());
-  const statStringLength = bb.offset - bb.markedOffset;
-  bb.reset();
-
-  const statStringRaw = bb.readBytes(statStringLength - 1).toBuffer(true);
-  bb.skip(1); // Skip null byte
+  const statStringRaw = bb.readCStringAsArray().toBuffer(true);
 
   const playersCount = bb.readUint32();
   const gameType = bb.readUint32();

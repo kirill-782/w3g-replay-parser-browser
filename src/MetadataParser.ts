@@ -1,4 +1,4 @@
-import ByteBuffer from "bytebuffer";
+import { ByteBuffer } from "./ByteBuffer";
 
 export interface StatStringData {
   speed: number;

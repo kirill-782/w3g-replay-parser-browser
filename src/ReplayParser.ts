@@ -1,6 +1,6 @@
 export type Decompressor = (data: Uint8Array) => Uint8Array;
-import ByteBuffer from "bytebuffer";
 import { BlockParser, RecordsResult } from "./BlockParser";
+import { ByteBuffer } from "./ByteBuffer";
 
 const REPLAY_MAGIC_HEADER = "Warcraft III recorded game\x1A";
 
@@ -30,7 +30,7 @@ export interface ReplayResult {
 export class ReplayParser {
 
   public parseReplay(
-    data: ByteBuffer | ArrayBuffer | Uint8Array | string
+    data: ArrayBuffer | Uint8Array
   ): ReplayResult {
     const bb = ByteBuffer.wrap(data, true);
     bb.limit = bb.capacity();
