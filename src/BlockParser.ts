@@ -150,6 +150,9 @@ export class BlockParser {
       playerLeave: [],
     };
 
+    let time = 0;
+    let recordsParsed = 0;
+
     for (let i = 0; i < blockCount; ++i) {
       const compressedBlockSize = bb.readUint16();
       if (isReforged) bb.skip(2);
@@ -165,9 +168,6 @@ export class BlockParser {
       appendAndCompact(decompressedDataBlock, decompressedData);
 
       if (i === 0) decompressedData.readUint32(); // Unknown start
-
-      let time = 0;
-      let recordsParsed = 0;
 
       while (true) {
         if (
