@@ -1,5 +1,41 @@
 import { ByteBuffer } from "./ByteBuffer";
 
+export type AvailableActionData =
+  | PauseGameData
+  | ResumeGameData
+  | SetGameSpeedData
+  | IncreaseSpeedData
+  | DecreaseSpeedData
+  | SaveGameData
+  | SaveGameFinishedData
+  | AbilityActionData
+  | PositionAbilityActionData
+  | PositionAndObjectAbilityActionData
+  | ItemActionData
+  | AbilityTwoTargetTwoItemActionData
+  | ChangeSelectionData
+  | AssignGroupHotkeyData
+  | SelectGroupHotkeyData
+  | SelectSubGroupData
+  | PreSubselectionData
+  | Unknown1BData
+  | SelectGroudItemData
+  | CancelHeroRevivalData
+  | RemoveQueuedUnitData
+  | Unknown21Data
+  | SinglePlayerChatData
+  | AllyOptionsData
+  | ResourceTransferData
+  | ChatCommandData
+  | ESCKeyEventData
+  | Unknown62Data
+  | OpenSkillSubmenuData
+  | OpenBuildSubmenuData
+  | MinimapPingData
+  | Unknown69Data
+  | Unknown6AData
+  | SyncIntegerData
+  | Unknown75Data;
 
 export interface ActionHandlerList {
   [key: number]: (bb: ByteBuffer) => ActionData;
