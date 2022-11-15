@@ -213,11 +213,15 @@ const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
             realValue: bb.readInt32(),
           };
 
+          break;
+
         case 0x05:
           value = {
             variableType,
             realValue: bb.readFloat32(),
           };
+
+          break;
 
         case 0x06:
           value = {
@@ -227,11 +231,15 @@ const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
             ),
           };
 
+          break;
+
         case 0x08:
           value = {
             variableType,
             booleanValue: bb.readFloat32(),
           };
+
+          break;
 
         default:
           rawValue = {
