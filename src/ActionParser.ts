@@ -191,8 +191,10 @@ export interface UJApiSyncHashtableData {
 
 export type UJApiSyncData = UJApiSyncHashtableData;
 
-const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
+const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData | undefined => {
+  bb.readUint8(); // [
   const subtype = bb.readUint8();
+  bb.readUint8(); // ]
 
   switch (subtype) {
     case 0x02: {
@@ -262,7 +264,7 @@ const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
     }
 
     default:
-      bb.offset--;
+      bb.offset - +3;
       return undefined;
   }
 };
@@ -888,7 +890,14 @@ export class ActionParser {
         const actionId = bb.readUint8();
 
         if (this.actionHandlers[actionId]) {
-          actions.push(this.actionHandlers[actionId](bb));
+          const result = this.actionHandlers[actionId](bb);
+
+          if (result) {
+            actions.push(result);
+          } else {
+            bb.offset--;
+            break;
+          }
         } else {
           bb.offset--;
           break;
