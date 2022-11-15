@@ -35,7 +35,8 @@ export type AvailableActionData =
   | Unknown69Data
   | Unknown6AData
   | SyncIntegerData
-  | Unknown75Data;
+  | Unknown75Data
+  | UJApiSyncData;
 
 export interface ActionHandlerList {
   [key: number]: (bb: ByteBuffer) => ActionData;
@@ -138,6 +139,142 @@ const processAbilityAction = (bb: ByteBuffer): AbilityActionData => {
     unknownA: bb.readUint32(),
     unknownB: bb.readUint32(),
   };
+};
+
+export interface UJApiSyncDataParent extends ActionData {
+  type: 0x0a;
+  subType: number;
+}
+
+export interface UJApiSyncHashtableData extends UJApiSyncDataParent {
+  type: 0x0a;
+  subType: 0x02;
+  isReplay: number;
+  payloadLength: number;
+  handleId: number;
+  parentKey: number;
+  childKey: number;
+  value:
+    | {
+        variableType: 0x04;
+        integerValue: number;
+      }
+    | {
+        variableType: 0x05;
+        realValue: number;
+      }
+    | {
+        variableType: 0x06;
+        stringValue: string;
+      }
+    | {
+        variableType: 0x08;
+        booleanValue: number;
+      }
+    | {
+        variableType: number;
+        value: Uint8Array;
+      };
+}
+
+type UJApiSyncData = UJApiSyncDataParent;
+
+const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
+  const subtype = bb.readUint8();
+
+  switch (subtype) {
+    case 0x02: {
+      const isReplay = bb.readUint8();
+      const variableType = bb.readUint8();
+      const payloadLength = bb.readUint16();
+      const handleId = bb.readUint32();
+      const parentKey = bb.readUint32();
+      const childKey = bb.readUint32();
+
+      switch (variableType) {
+        case 0x04:
+          return {
+            type: 0x0a,
+            subType: 0x02,
+            isReplay,
+            payloadLength,
+            handleId,
+            parentKey,
+            childKey,
+            value: {
+              variableType,
+              integerValue: bb.readUint32(),
+            },
+          };
+
+        case 0x05:
+          return {
+            type: 0x0a,
+            subType: 0x02,
+            isReplay,
+            payloadLength,
+            handleId,
+            parentKey,
+            childKey,
+            value: {
+              variableType,
+              realValue: bb.readFloat32(),
+            },
+          };
+
+        case 0x06:
+          return {
+            type: 0x0a,
+            subType: 0x02,
+            isReplay,
+            payloadLength,
+            handleId,
+            parentKey,
+            childKey,
+            value: {
+              variableType,
+              stringValue: new TextDecoder().decode(
+                bb.readBytes(payloadLength).toBuffer()
+              ),
+            },
+          };
+
+        case 0x08:
+          return {
+            type: 0x0a,
+            subType: 0x02,
+            isReplay,
+            payloadLength,
+            handleId,
+            parentKey,
+            childKey,
+            value: {
+              variableType,
+              booleanValue: bb.readFloat32(),
+            },
+          };
+
+        default:
+          return {
+            type: 0x0a,
+            subType: 0x02,
+            isReplay,
+            payloadLength,
+            handleId,
+            parentKey,
+            childKey,
+            value: {
+              variableType,
+              value: bb.readBytes(payloadLength).toBuffer(),
+            },
+          };
+      }
+    }
+
+    default:
+      bb.offset--;
+      return undefined;
+  }
 };
 
 export interface PositionAbilityActionData extends ActionData {
@@ -682,6 +819,7 @@ const DEFAULT_ACTION_HANDLERS: ActionHandlerList = {
   0x5: processDecreaseSpeed,
   0x6: processSaveGame,
   0x7: processSaveGameFinished,
+  0xa: processUJApiSyncAction,
   0x10: processAbilityAction,
   0x11: processPositionAbilityAction,
   0x12: processPositionAndObjectAbilityAction,
@@ -761,7 +899,10 @@ export class ActionParser {
 
         if (this.actionHandlers[actionId]) {
           actions.push(this.actionHandlers[actionId](bb));
-        } else break;
+        } else {
+          bb.offset--;
+          break;
+        }
       }
 
       const remaingBuffer = bb.slice(bb.offset, currentBlockEnd).toBuffer(true);

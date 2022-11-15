@@ -132,7 +132,14 @@ export interface SlotInfo {
 const decompressor = (data: Uint8Array): Uint8Array => {
   const inflater = new pako.Inflate();
   inflater.push(data, pako.constants.Z_SYNC_FLUSH | pako.constants.Z_FINISH);
-  return inflater.result as Uint8Array;
+
+  const inflaterNative = inflater as any;
+
+  if (inflater.result) return inflater.result as Uint8Array;
+
+  return inflaterNative.strm.output.length === inflaterNative.strm.next_out
+    ? inflaterNative.strm.output
+    : inflaterNative.strm.output.subarray(0, inflaterNative.strm.next_out);
 };
 
 export class BlockParser {

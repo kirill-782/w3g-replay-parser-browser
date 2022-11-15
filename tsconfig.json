@@ -10,7 +10,7 @@
     "declarationDir": "./dist/types",
     "moduleResolution": "node",
     "allowJs": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "esModuleInterop": true,
 
     "declaration": true
