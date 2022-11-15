@@ -141,43 +141,55 @@ const processAbilityAction = (bb: ByteBuffer): AbilityActionData => {
   };
 };
 
-export interface UJApiSyncDataParent extends ActionData {
-  type: 0x0a;
-  subType: number;
+export enum VariableType {
+  TYPE_NOTHING = 0, // "nothing"
+  TYPE_UNKNOWN = 1, // "unknown"
+  TYPE_NULL = 2, // "null"
+  TYPE_CODE = 3, // "code"
+  TYPE_INTEGER = 4, // "integer"
+  TYPE_REAL = 5, // "real"
+  TYPE_STRING = 6, // "string"
+  TYPE_HANDLE = 7, // "handle"
+  TYPE_BOOLEAN = 8, // "boolean"
+  TYPE_INTEGER_ARRAY = 9, // "integer array"
+  TYPE_REAL_ARRAY = 10, // "real array"
+  TYPE_STRING_ARRAY = 11, // "string array"
+  TYPE_HANDLE_ARRAY = 12, // "handle array"
+  TYPE_BOOLEAN_ARRAY = 13, // "boolean array"
 }
 
-export interface UJApiSyncHashtableData extends UJApiSyncDataParent {
-  type: 0x0a;
+export interface UJApiSyncHashtableData {
+  type: 0xa0;
   subType: 0x02;
   isReplay: number;
   payloadLength: number;
   handleId: number;
   parentKey: number;
   childKey: number;
-  value:
+  value?:
     | {
-        variableType: 0x04;
+        variableType: VariableType.TYPE_INTEGER;
         integerValue: number;
       }
     | {
-        variableType: 0x05;
+        variableType: VariableType.TYPE_REAL;
         realValue: number;
       }
     | {
-        variableType: 0x06;
+        variableType: VariableType.TYPE_STRING;
         stringValue: string;
       }
     | {
-        variableType: 0x08;
+        variableType: VariableType.TYPE_BOOLEAN;
         booleanValue: number;
-      }
-    | {
-        variableType: number;
-        value: Uint8Array;
       };
+  rawValue?: {
+    variableType: number;
+    data: Uint8Array;
+  };
 }
 
-type UJApiSyncData = UJApiSyncDataParent;
+export type UJApiSyncData = UJApiSyncHashtableData;
 
 const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
   const subtype = bb.readUint8();
@@ -191,84 +203,54 @@ const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData => {
       const parentKey = bb.readUint32();
       const childKey = bb.readUint32();
 
+      let value;
+      let rawValue;
+
       switch (variableType) {
         case 0x04:
-          return {
-            type: 0x0a,
-            subType: 0x02,
-            isReplay,
-            payloadLength,
-            handleId,
-            parentKey,
-            childKey,
-            value: {
-              variableType,
-              integerValue: bb.readUint32(),
-            },
+          value = {
+            variableType,
+            realValue: bb.readInt32(),
           };
 
         case 0x05:
-          return {
-            type: 0x0a,
-            subType: 0x02,
-            isReplay,
-            payloadLength,
-            handleId,
-            parentKey,
-            childKey,
-            value: {
-              variableType,
-              realValue: bb.readFloat32(),
-            },
+          value = {
+            variableType,
+            realValue: bb.readFloat32(),
           };
 
         case 0x06:
-          return {
-            type: 0x0a,
-            subType: 0x02,
-            isReplay,
-            payloadLength,
-            handleId,
-            parentKey,
-            childKey,
-            value: {
-              variableType,
-              stringValue: new TextDecoder().decode(
-                bb.readBytes(payloadLength).toBuffer()
-              ),
-            },
+          value = {
+            variableType,
+            stringValue: new TextDecoder().decode(
+              bb.readBytes(payloadLength).toBuffer()
+            ),
           };
 
         case 0x08:
-          return {
-            type: 0x0a,
-            subType: 0x02,
-            isReplay,
-            payloadLength,
-            handleId,
-            parentKey,
-            childKey,
-            value: {
-              variableType,
-              booleanValue: bb.readFloat32(),
-            },
+          value = {
+            variableType,
+            booleanValue: bb.readFloat32(),
           };
 
         default:
-          return {
-            type: 0x0a,
-            subType: 0x02,
-            isReplay,
-            payloadLength,
-            handleId,
-            parentKey,
-            childKey,
-            value: {
-              variableType,
-              value: bb.readBytes(payloadLength).toBuffer(),
-            },
+          rawValue = {
+            variableType,
+            data: bb.readBytes(payloadLength).toBuffer(),
           };
       }
+
+      return {
+        type: 0xa0,
+        subType: 0x02,
+        isReplay,
+        payloadLength,
+        handleId,
+        parentKey,
+        childKey,
+        value,
+        rawValue,
+      };
     }
 
     default:
@@ -819,7 +801,6 @@ const DEFAULT_ACTION_HANDLERS: ActionHandlerList = {
   0x5: processDecreaseSpeed,
   0x6: processSaveGame,
   0x7: processSaveGameFinished,
-  0xa: processUJApiSyncAction,
   0x10: processAbilityAction,
   0x11: processPositionAbilityAction,
   0x12: processPositionAndObjectAbilityAction,
@@ -864,6 +845,7 @@ const DEFAULT_ACTION_HANDLERS: ActionHandlerList = {
   0x6a: processUnknown6A,
   0x6b: processSyncInteger,
   0x75: processUnknown1B,
+  0xa0: processUJApiSyncAction,
 };
 
 export interface ActionCommandBlock {

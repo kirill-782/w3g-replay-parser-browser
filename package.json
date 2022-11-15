@@ -1,6 +1,6 @@
 {
   "name": "@kokomi/w3g-parser-browser",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "main": "dist/lib/index.js",
   "types": "dist/types/index.d.ts",
   "scripts": {
