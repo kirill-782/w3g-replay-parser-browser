@@ -161,7 +161,6 @@ export enum VariableType {
 export interface UJApiSyncHashtableData {
   type: 0xa0;
   subType: 0x02;
-  isReplay: number;
   payloadLength: number;
   handleId: number;
   parentKey: number;
@@ -198,7 +197,6 @@ const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData | undefined => {
 
   switch (subtype) {
     case 0x02: {
-      const isReplay = bb.readUint8();
       const variableType = bb.readUint8();
       const payloadLength = bb.readUint16();
       const handleId = bb.readUint32();
@@ -253,7 +251,6 @@ const processUJApiSyncAction = (bb: ByteBuffer): UJApiSyncData | undefined => {
       return {
         type: 0xa0,
         subType: 0x02,
-        isReplay,
         payloadLength,
         handleId,
         parentKey,
