@@ -305,7 +305,7 @@ const parseLeaveRecord = (bb: ByteBuffer): LeaveRecord => {
 const parseChatRecord = (bb: ByteBuffer): ChatRecord => {
   if (
     bb.offset + 3 > bb.limit ||
-    bb.offset + bb.readUint16(bb.offset + 1) > bb.limit
+    bb.offset + bb.readUint16(bb.offset + 1)  + 3 > bb.limit
   )
     return undefined;
 
