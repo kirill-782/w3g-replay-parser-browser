@@ -129,7 +129,7 @@ export interface SlotInfo {
   handicap: number;
 }
 
-const decompressor = (data: Uint8Array): Uint8Array => {
+export const decompressor = (data: Uint8Array): Uint8Array => {
   const inflater = new pako.Inflate();
   inflater.push(data, pako.constants.Z_SYNC_FLUSH | pako.constants.Z_FINISH);
 
@@ -413,7 +413,7 @@ const parseStartRecord = (bb: ByteBuffer): StartRecord => {
   };
 };
 
-const parseSlotInfo = (bb: ByteBuffer): SlotInfo => {
+export const parseSlotInfo = (bb: ByteBuffer): SlotInfo => {
   return {
     playerId: bb.readUint8(),
     downloadStatus: bb.readUint8(),
