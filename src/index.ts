@@ -1,3 +1,4 @@
+import { SlotInfo } from "./BlockParser";
 import {
   Decompressor,
   HeaderData,
@@ -9,6 +10,7 @@ import {
 import { SaveGameParser, SaveGameResult, SaveGameData } from "./SaveGameData";
 
 export default ReplayParser;
+export { SlotInfo };
 export { HeaderData, SubHeaderData, ReplayResult };
 export * from "./ActionParser";
 export { Decompressor };
