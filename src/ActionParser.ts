@@ -35,7 +35,7 @@ export type AvailableActionData =
   | Unknown69Data
   | Unknown6AData
   | SyncIntegerData
-  | Unknown75Data
+  | ArrowKeyData
   | UJApiSyncData;
 
 export interface ActionHandlerList {
@@ -788,15 +788,15 @@ const processSyncInteger = (bb: ByteBuffer): SyncIntegerData => {
   };
 };
 
-export interface Unknown75Data extends ActionData {
+export interface ArrowKeyData extends ActionData {
   type: 0x75;
-  unknownA: number;
+  arrowKey: number;
 }
 
-const processUnknown75 = (bb: ByteBuffer): Unknown75Data => {
+const processArrowKey = (bb: ByteBuffer): ArrowKeyData => {
   return {
     type: 0x75,
-    unknownA: bb.readUint8(),
+    arrowKey: bb.readUint8(),
   };
 };
 
@@ -851,7 +851,7 @@ const DEFAULT_ACTION_HANDLERS: ActionHandlerList = {
   0x69: processUnknown69,
   0x6a: processUnknown6A,
   0x6b: processSyncInteger,
-  0x75: processUnknown1B,
+  0x75: processArrowKey,
   0xa0: processUJApiSyncAction,
 };
 
